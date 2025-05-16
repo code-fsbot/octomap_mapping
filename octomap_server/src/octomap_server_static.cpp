@@ -36,49 +36,56 @@
 using octomap_msgs::GetOctomap;
 
 #define USAGE "\nUSAGE: octomap_server_static <mapfile.[bt|ot]>\n" \
-		"  mapfile.bt: OctoMap filename to be loaded (.bt: binary tree, .ot: general octree)\n"
+              "  mapfile.bt: OctoMap filename to be loaded (.bt: binary tree, .ot: general octree)\n"
 
 using namespace std;
 using namespace octomap;
 
-class OctomapServerStatic{
+class OctomapServerStatic
+{
 public:
-  OctomapServerStatic(const std::string& filename)
-    : m_octree(NULL), m_worldFrameId("map")
+  OctomapServerStatic(const std::string &filename)
+      : m_octree(NULL), m_worldFrameId("map")
   {
 
     ros::NodeHandle private_nh("~");
     private_nh.param("frame_id", m_worldFrameId, m_worldFrameId);
 
-
     // open file:
-    if (filename.length() <= 3){
+    if (filename.length() <= 3)
+    {
       ROS_ERROR("Octree file does not have .ot extension");
       exit(1);
     }
 
-    std::string suffix = filename.substr(filename.length()-3, 3);
+    std::string suffix = filename.substr(filename.length() - 3, 3);
 
     // .bt files only as OcTree, all other classes need to be in .ot files:
-    if (suffix == ".bt"){
-      OcTree* octree = new OcTree(filename);
+    if (suffix == ".bt")
+    {
+      OcTree *octree = new OcTree(filename);
 
       m_octree = octree;
-    } else if (suffix == ".ot"){
-      AbstractOcTree* tree = AbstractOcTree::read(filename);
-      if (!tree){
+    }
+    else if (suffix == ".ot")
+    {
+      AbstractOcTree *tree = AbstractOcTree::read(filename);
+      if (!tree)
+      {
         ROS_ERROR("Could not read octree from file");
         exit(1);
       }
 
-      m_octree = dynamic_cast<AbstractOccupancyOcTree*>(tree);
-
-    } else{
+      m_octree = dynamic_cast<AbstractOccupancyOcTree *>(tree);
+    }
+    else
+    {
       ROS_ERROR("Octree file does not have .bt or .ot extension");
       exit(1);
     }
 
-    if (!m_octree ){
+    if (!m_octree)
+    {
       ROS_ERROR("Could not read right octree class in file");
       exit(1);
     }
@@ -86,18 +93,15 @@ public:
     ROS_INFO("Read octree type \"%s\" from file %s", m_octree->getTreeType().c_str(), filename.c_str());
     ROS_INFO("Octree resultion: %f, size: %zu", m_octree->getResolution(), m_octree->size());
 
-
     m_octomapBinaryService = m_nh.advertiseService("octomap_binary", &OctomapServerStatic::octomapBinarySrv, this);
     m_octomapFullService = m_nh.advertiseService("octomap_full", &OctomapServerStatic::octomapFullSrv, this);
-
   }
 
-  ~OctomapServerStatic(){
-
-
+  ~OctomapServerStatic()
+  {
   }
 
-  bool octomapBinarySrv(GetOctomap::Request  &req,
+  bool octomapBinarySrv(GetOctomap::Request &req,
                         GetOctomap::Response &res)
   {
     ROS_INFO("Sending binary map data on service request");
@@ -109,13 +113,12 @@ public:
     return true;
   }
 
-  bool octomapFullSrv(GetOctomap::Request  &req,
-                                     GetOctomap::Response &res)
+  bool octomapFullSrv(GetOctomap::Request &req,
+                      GetOctomap::Response &res)
   {
     ROS_INFO("Sending full map data on service request");
     res.map.header.frame_id = m_worldFrameId;
     res.map.header.stamp = ros::Time::now();
-
 
     if (!octomap_msgs::fullMapToMsg(*m_octree, res.map))
       return false;
@@ -127,30 +130,32 @@ private:
   ros::ServiceServer m_octomapBinaryService, m_octomapFullService;
   ros::NodeHandle m_nh;
   std::string m_worldFrameId;
-  AbstractOccupancyOcTree* m_octree;
-
+  AbstractOccupancyOcTree *m_octree;
 };
 
-int main(int argc, char** argv){
+int main(int argc, char **argv)
+{
   ros::init(argc, argv, "octomap_server_static");
   std::string mapFilename("");
 
   if (argc == 2)
     mapFilename = std::string(argv[1]);
-  else{
+  else
+  {
     ROS_ERROR("%s", USAGE);
     exit(1);
   }
 
-  try{
+  try
+  {
     OctomapServerStatic ms(mapFilename);
     ros::spin();
-  }catch(std::runtime_error& e){
+  }
+  catch (std::runtime_error &e)
+  {
     ROS_ERROR("octomap_server_static exception: %s", e.what());
     exit(2);
   }
 
   exit(0);
 }
-
-
