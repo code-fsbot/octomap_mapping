@@ -1,0 +1,28 @@
+<launch>
+
+    <!-- Octomap Server -->
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server" output="screen">
+        <!-- 基本参数 -->
+        <param name="resolution"                value="0.2" />      <!-- 地图分辨率(m)，建议0.05~0.2 -->
+        <param name="frame_id"                  value="map" />      <!-- 地图坐标系 -->
+        <!-- 传感器模型参数，限制建图范围 -->
+        <param name="sensor_model/max_range"    value="5.0" />      <!-- 最大探测距离，超出不更新 -->
+        <param name="sensor_model/min_range"   value="0.05" />      <!-- 传感器最小有效距离 -->
+        <param name="sensor_model/hit_probability" value="0.7" />  <!-- 测到占用概率 -->
+        <param name="sensor_model/miss_probability" value="0.4" /> <!-- 测到空闲概率 -->
+        <!-- 高度限制，忽略过高或过低点 -->
+        <param name="occupancy_min_z"           value="-99.0" />      <!-- 最低高度过滤 -->
+        <param name="occupancy_max_z"           value="99.0" />      <!-- 最高高度过滤 -->
+        <!-- 地图修剪和大小控制 -->
+        <param name="max_tree_depth"            value="16" />       <!-- 树深度，影响地图最大尺寸 -->
+        <param name="pruning_threshold"         value="0.0" />      <!-- 修剪阈值，默认为0不修剪 -->
+        <!-- 使用传感器原点作为投影起点，避免远距离误差 -->
+        <param name="use_sensor_origin"         value="true" />
+        <param name="sensor_origin_max_range"   value="5.5" />
+        <!-- 是否latch -->
+        <param name="latch"                     value="false" />
+        <!-- 输入点云话题 -->
+        <remap from="cloud_in"                  to="/points_filtered" />
+    </node>
+
+</launch>
